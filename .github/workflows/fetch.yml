@@ -26,3 +26,7 @@ jobs:
 
       - name: Send Option Chain Email
         run: python send_email.py
+      - name: Delete All JSON Files
+        run: python delete_all_json.py
+
+
