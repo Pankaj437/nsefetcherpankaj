@@ -2,12 +2,17 @@ name: Fetch NSE play
 
 on:
   schedule:
-    - cron: "*/300 * * * *"   # Every 10 minutes
+    - cron: "0 */5 * * *"  # Every 5 hours
   workflow_dispatch:
 
 jobs:
-  run-script:
+  run-scripts:
     runs-on: ubuntu-latest
+
+    env:
+      EMAIL_USER: ${{ secrets.EMAIL_USER }}
+      EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
 
     steps:
     - name: Checkout repository
@@ -28,10 +33,19 @@ jobs:
     - name: Run NSE Fetcher
       run: python download_nse_chain.py
 
-    - name: Commit and Push
+    - name: Process option chain JSONs
+      run: python process_json.py
+
+    - name: Sort processed fund data
+      run: python fund_sort.py
+
+    - name: Email results
+      run: python email_sender.py
+
+    - name: Commit and Push JSON files
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "actions@github.com"
-        git add option_chain_*.json
-        git commit -m "Fetched NSE Option Chain at $(date)" || echo "No changes to commit"
+        git add option_chain_*.json funds_*.json all_funds_sorted_ascending.json
+        git commit -m "📈 Updated option chain and funds data - $(date)" || echo "No changes to commit"
         git push
