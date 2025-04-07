@@ -1,4 +1,4 @@
-name: Fetch NSE Option Chain
+name: Fetch NSE play
 
 on:
   schedule:
