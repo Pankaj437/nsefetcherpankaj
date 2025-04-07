@@ -1,47 +1,55 @@
-import requests
-import pandas as pd
+import asyncio
+import json
 from datetime import datetime
+from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 
-symbol = 'NIFTY'
+async def fetch_nse_data():
+    url = "https://www.nseindia.com/api/option-chain-indices?symbol=NIFTYNXT50&expiryDate=29-MAY-2025"
+    date_str = datetime.utcnow().strftime("%Y-%m-%d")
+    output_file = f"option_chain_{date_str}.json"
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Referer": "https://www.nseindia.com",
-    "Connection": "keep-alive",
-}
+    async with async_playwright() as p:
+        browser = await p.firefox.launch(headless=True)
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+        )
+        page = await context.new_page()
+        try:
+            await page.goto("https://www.nseindia.com", timeout=30000)
+            await page.wait_for_load_state("networkidle")
+        except PlaywrightTimeoutError:
+            print("⚠️ Homepage timeout—continuing...")
 
-session = requests.Session()
-session.headers.update(headers)
-session.get("https://www.nseindia.com", timeout=10)
+        try:
+            response = await page.evaluate("""
+                async (url) => {
+                    const res = await fetch(url, {
+                        method: "GET",
+                        headers: {
+                            "Accept": "application/json, text/javascript, */*; q=0.01",
+                            "User-Agent": navigator.userAgent,
+                            "Referer": "https://www.nseindia.com/option-chain"
+                        },
+                        credentials: "include"
+                    });
+                    const text = await res.text();
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.error("❌ JSON parse error:", text);
+                        throw e;
+                    }
+                }
+            """, url)
 
-url = f"https://www.nseindia.com/api/option-chain-indices?symbol={symbol}"
-response = session.get(url, timeout=10)
+            with open(output_file, "w", encoding="utf-8") as f:
+                json.dump(response, f, indent=4)
+            print(f"✅ Saved to {output_file}")
 
-if response.status_code == 200:
-    data = response.json()
-    records = data['records']['data']
-    rows = []
+        except Exception as e:
+            print(f"❌ Failed: {str(e)}")
 
-    for item in records:
-        ce = item.get('CE', {})
-        pe = item.get('PE', {})
-        strike_price = item.get('strikePrice')
+        await browser.close()
 
-        row = {
-            'strikePrice': strike_price,
-            'CE_OI': ce.get('openInterest'),
-            'CE_Chg_OI': ce.get('changeinOpenInterest'),
-            'CE_Volume': ce.get('totalTradedVolume'),
-            'PE_OI': pe.get('openInterest'),
-            'PE_Chg_OI': pe.get('changeinOpenInterest'),
-            'PE_Volume': pe.get('totalTradedVolume'),
-        }
-        rows.append(row)
-
-    df = pd.DataFrame(rows)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-    df.to_csv(f"option_chain_{symbol}_{timestamp}.csv", index=False)
-    print("✅ File saved")
-else:
-    print(f"❌ Error {response.status_code}")
+if __name__ == "__main__":
+    asyncio.run(fetch_nse_data())
