@@ -1,6 +1,18 @@
-- name: Email Option Chain
-  env:
-    EMAIL_USER: ${{ secrets.EMAIL_USER }}
-    EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-    EMAIL_TO: ${{ secrets.EMAIL_TO }}
-  run: python send_email.py
+name: Email Option Chain
+
+on:
+  workflow_dispatch:
+
+jobs:
+  send_email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Send email with option chain
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: python send_email.py
