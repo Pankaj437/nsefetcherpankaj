@@ -40,7 +40,7 @@ jobs:
       run: python fund_sort.py
 
     - name: Email results
-      run: python email_sender.py
+      run: python send_email.py
 
     - name: Commit and Push JSON files
       run: |
