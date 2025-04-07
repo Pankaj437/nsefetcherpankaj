@@ -2,7 +2,7 @@ name: Download NSE Option Chain
 
 on:
   schedule:
-    - cron: '30 4 * * *'  # 10:00 AM IST every day (UTC time)
+     - cron: '*/5 * * * *'  # 10:00 AM IST every day (UTC time)
   workflow_dispatch:      # Optional manual run
 
 jobs:
