@@ -1,9 +1,10 @@
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
+import calendar
 
-# Define all Nifty indices you want to fetch
+# Nifty index symbols and their names
 NIFTY_INDICES = {
     "NIFTY": "Nifty 50",
     "BANKNIFTY": "Nifty Bank",
@@ -12,10 +13,26 @@ NIFTY_INDICES = {
     "NIFTYNXT50": "Nifty Next 50"
 }
 
-EXPIRY_DATE = "29-MAY-2025"
+def get_next_month_expiry():
+    """Return the last Thursday of the next month as expiry date (in format: DD-MMM-YYYY)."""
+    today = datetime.today()
+    # First day of next month
+    if today.month == 12:
+        next_month = datetime(today.year + 1, 1, 1)
+    else:
+        next_month = datetime(today.year, today.month + 1, 1)
 
-async def fetch_option_chain(page, symbol):
-    url = f"https://www.nseindia.com/api/option-chain-indices?symbol={symbol}&expiryDate={EXPIRY_DATE}"
+    # Find all Thursdays in next month
+    last_day = calendar.monthrange(next_month.year, next_month.month)[1]
+    thursdays = [day for day in range(1, last_day + 1)
+                 if datetime(next_month.year, next_month.month, day).weekday() == 3]
+
+    last_thursday = thursdays[-1]
+    expiry_date = datetime(next_month.year, next_month.month, last_thursday)
+    return expiry_date.strftime("%d-%b-%Y").upper()
+
+async def fetch_option_chain(page, symbol, expiry_date):
+    url = f"https://www.nseindia.com/api/option-chain-indices?symbol={symbol}&expiryDate={expiry_date}"
     try:
         response = await page.evaluate("""
             async (url) => {
@@ -47,6 +64,9 @@ async def fetch_option_chain(page, symbol):
         print(f"❌ Error fetching {symbol}: {str(e)}")
 
 async def fetch_all_indices():
+    expiry_date = get_next_month_expiry()
+    print(f"📅 Using expiry date: {expiry_date}")
+
     async with async_playwright() as p:
         browser = await p.firefox.launch(headless=True)
         context = await browser.new_context(
@@ -60,7 +80,7 @@ async def fetch_all_indices():
             print("⚠️ Homepage load timeout—continuing anyway...")
 
         for symbol in NIFTY_INDICES:
-            await fetch_option_chain(page, symbol)
+            await fetch_option_chain(page, symbol, expiry_date)
 
         await browser.close()
 
