@@ -2,7 +2,7 @@ name: Download from Example.com
 
 on:
   schedule:
-    - cron: "*/2 * * * *"  # Every 2 minutes (UTC time)
+    - cron: "*/10 * * * *"  # Every 2 minutes (UTC time)
   workflow_dispatch:       # Also allow manual trigger
 
 jobs:
