@@ -56,7 +56,7 @@ async def fetch_option_chain(page, symbol, expiry_date):
         """, url)
 
         date_str = datetime.utcnow().strftime("%Y-%m-%d")
-        file_name = f"option_chain_{symbol}_{date_str}.json"
+        file_name = f"{symbol.lower()}.json"
         with open(file_name, "w", encoding="utf-8") as f:
             json.dump(response, f, indent=4)
         print(f"✅ {symbol} data saved to {file_name}")
