@@ -42,10 +42,3 @@ jobs:
     - name: Email results
       run: python send_email.py
 
-    - name: Commit and Push JSON files
-      run: |
-        git config --global user.name "github-actions"
-        git config --global user.email "actions@github.com"
-        git add option_chain_*.json funds_*.json all_funds_sorted_ascending.json
-        git commit -m "📈 Updated option chain and funds data - $(date)" || echo "No changes to commit"
-        git push
