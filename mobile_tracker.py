@@ -3,12 +3,12 @@ from playwright.sync_api import Playwright, sync_playwright
 
 # List of credentials (email, password)
 accounts = [
-    ("goxafo5226@buides.com", "sharma8092"),
-    ("enormouspan@gmail.com", "pankaj437"),
-    ("technologysharma9@gmail.com", "sharma437"),
-    ("abhishekkrr4709@gmail.com", "pankaj437"),
-    ("niteshsharmaofficial0@gmail.com", "pankaj437"),
-    ("xikad63339@abnovel.com", "pankaj437"),
+    ("goxaf26@buides.com", "sharma8092"),
+    ("enormpan@gmail.com", "pankaj437"),
+    ("technologysha9@gmail.com", "sharma437"),
+    ("abhishr4709@gmail.com", "pankaj437"),
+    ("nitrmaofficial0@gmail.com", "pankaj437"),
+    ("xikad@abnovel.com", "pankaj437"),
   
 ]
 
